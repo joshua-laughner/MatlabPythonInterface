@@ -51,34 +51,7 @@ if strcmpi(dimorder, 'match')
     A = permute(A, permvec);
 end
 
-l = list_recursion(A, py.list);
+l = list_recursion(A);
 N = py.numpy.array(l);
 
 end
-
-function l = list_recursion(A, l)
-% This recursive function will test if 
-
-if isvector(A)
-    if ~isrow(A); 
-        % Python requires that A be 1-by-N, i.e. a row vector
-        A = A';
-    end
-    l=(py.list(A));
-else
-    sz = size(A);
-    A2 = reshape(A, prod(sz(1:end-1)), sz(end));
-    for a=1:size(A, ndims(A))
-        % ismatrix is true if ndims(A) <= 2
-        % Test A not A2 because A2 will always be a matrix
-        if ~ismatrix(A) 
-            Aslice = reshape(A2(:,a), sz(1:end-1));
-        else
-            Aslice = A2(:,a);
-        end
-        l.append(list_recursion(Aslice, py.list));
-    end
-end
-
-end
-
