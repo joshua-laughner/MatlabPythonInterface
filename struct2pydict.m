@@ -52,20 +52,7 @@ for a=1:numel(fns)
     fieldind = a*2;
     
     datacell{nameind} = fns{a};
-    field = S.(fns{a});
-    if isnumeric(field)
-        if ~isscalar(field)
-            field = matarray2numpyarray(field);
-        end
-    elseif ischar(field)
-        % strings can be directly converted
-    elseif iscell(field)
-        field = cell2pylist(field);
-    elseif isstruct(field)
-        field = struct2pydict(field);
-    else
-        E.notimplemented('Unable to convert field of type "%s" into appropriate Python type', class(field));
-    end
+    field = matlab2python(S.(fns{a}));
     datacell{fieldind} = field;
 end
 
