@@ -12,7 +12,7 @@ function [ pyval ] = matlab2python( val )
 %       Cell arrays -> lists (cell2pylist)
 %       Structures -> dictionaries (struct2pydict)
 
-if isnumeric(val)
+if isnumeric(val) || islogical(val)
     if ~isscalar(val)
         pyval = matarray2numpyarray(val);
     else
