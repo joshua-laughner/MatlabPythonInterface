@@ -10,18 +10,17 @@ function pdict = struct2pydict( S, suppress_warn )
 %   has 2 or more non-singletone dimensions.
 
 
-E = JLLErrors;
 if ~exist('suppress_warn', 'var')
     suppress_warn = false;
 else
     if ~isscalar(suppress_warn) || ~islogical(suppress_warn) && ~isnumeric(suppress_warn)
-        E.badinput('If given, SUPPRESS_WARN must be a scalar logical or numerical value')
+        error('pyinterface:badinput','If given, SUPPRESS_WARN must be a scalar logical or numerical value')
     end
 end
 
 
 if ~isstruct(S)
-    E.badinput('S must be a structure')
+    error('pyinterface:badinput','S must be a structure')
 elseif ~isvector(S) && ~suppress_warn
     warning('S will be reshaped to a vector in the output list; any higher dimensional shape will be lost')
 end
@@ -42,8 +41,6 @@ end
 end
 
 function pdict = convert_one_struct( S )
-
-E = JLLErrors;
 
 fns = fieldnames(S);
 datacell = cell(2*numel(fns),1);

@@ -4,7 +4,6 @@ function [ S ] = pydict2struct( pdict )
 %   PDICT is a list of dictionaries, then S will be a multi-element
 %   structure. Converts fields using python2matlab.m.
 
-E = JLLErrors;
 
 if isa(pdict, 'py.list')
     pcell = cell(pdict);
@@ -13,12 +12,12 @@ if isa(pdict, 'py.list')
         dict_test(a) = isa(pcell{a}, 'py.dict');
     end
     if ~all(dict_test)
-        E.badinput('PDICT must be of type PY.LIST or PY.DICT. If is a PY.LIST, it must be a list of dictionaries.')
+        error('pyinterface:badinput','PDICT must be of type PY.LIST or PY.DICT. If is a PY.LIST, it must be a list of dictionaries.')
     end
 elseif isa(pdict, 'py.dict')
     pcell = {pdict};
 else
-    E.badinput('PDICT must be of type PY.LIST or PY.DICT');
+    error('pyinterface:badinput','PDICT must be of type PY.LIST or PY.DICT');
 end
 
 S = repmat(struct, 1, numel(pcell));

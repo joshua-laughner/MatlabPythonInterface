@@ -13,9 +13,8 @@ function [ L ] = cell2pylist( C, dimorder )
 %%%%% INPUT CHECKING %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-E = JLLErrors;
 if ~iscell(C)
-    E.badinput('C should be a cell array')
+    error('pyinterface:badinput','C should be a cell array')
 end
 
 if ~exist('dimorder','var')
@@ -23,7 +22,7 @@ if ~exist('dimorder','var')
 else
     allowed_orders = {'match', 'native'};
     if ~any(strcmpi(dimorder, allowed_orders))
-        E.badinput('DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
+        error('pyinterface:badinput','DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
     end
 end
 

@@ -3,14 +3,12 @@ function [  ] = python_make_pickle( obj, filename )
 %   PYTHON_MAKE_PICKLE( OBJ, FILENAME ) Saves the Python object, OBJ as a
 %   pickle file, given by the path FILENAME. 
 
-E = JLLErrors;
-
 if isempty(regexp(class(obj),'py', 'once'))
-    E.badinput('OBJ must be a Python type')
+    error('pyinterface:badinput','OBJ must be a Python type')
 end
 file_path = fileparts(filename);
 if ~isempty(file_path) && ~exist(file_path, 'dir')
-    E.dir_dne(file_path)
+    error('pyinterface:dir_dne', 'The directory "%s" does not exist', file_path)
 end
 
 my_path = fileparts(mfilename('fullpath'));

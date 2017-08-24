@@ -13,9 +13,8 @@ function [ A ] = numpyarray2matarray( N, dimorder )
 %%%%% INPUT CHECKING %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-E = JLLErrors;
 if ~isa(N, 'py.numpy.ndarray')
-    E.badinput('N should be a Numpy ndarray')
+    error('pyinterface:badinput','N should be a Numpy ndarray')
 end
 
 if ~exist('dimorder','var')
@@ -23,7 +22,7 @@ if ~exist('dimorder','var')
 else
     allowed_orders = {'match', 'native'};
     if ~any(strcmpi(dimorder, allowed_orders))
-        E.badinput('DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
+        error('pyinterface:badinput','DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
     end
 end
 

@@ -21,9 +21,8 @@ function [ N ] = matarray2numpyarray( A, dimorder, dtype )
 %%%%% INPUT CHECKING %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-E = JLLErrors;
 if ~isnumeric(A) && ~islogical(A)
-    E.badinput('A should be a numeric or logical array')
+    error('pyinterface:badinput','A should be a numeric or logical array')
 end
 
 if ~exist('dimorder','var') || isempty(dimorder)
@@ -31,7 +30,7 @@ if ~exist('dimorder','var') || isempty(dimorder)
 else
     allowed_orders = {'match', 'native'};
     if ~any(strcmpi(dimorder, allowed_orders))
-        E.badinput('DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
+        error('pyinterface:badinput','DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
     end
 end
 
