@@ -1,4 +1,4 @@
-function [ L ] = cell2pylist( C, dimorder )
+function [ L ] = cell2pylist( C, dimorder, force_array )
 %CELL2PYLIST Convert a Matlab cell into a Python list-of-lists
 %   N = CELL2PYLIST( C ) Converts the Matlab array, A, into a Numpy
 %   array N. Dimension order is treated so that L[:][0][0] == A(:,1,1).
@@ -17,13 +17,17 @@ if ~iscell(C)
     error('pyinterface:badinput','C should be a cell array')
 end
 
-if ~exist('dimorder','var')
+if ~exist('dimorder','var') || isempty(dimorder)
     dimorder = 'match';
 else
     allowed_orders = {'match', 'native'};
     if ~any(strcmpi(dimorder, allowed_orders))
         error('pyinterface:badinput','DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
     end
+end
+
+if ~strcmpi(force_array, 'scalar')
+    warning('pyinterface:force_array', 'FORCE_ARRAY is not implemented for cell2pylist yet');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%

@@ -75,15 +75,20 @@ classdef IPyMatTests < matlab.unittest.TestCase
             testCase.verifyEqual(converted_val, py.PySideTests.float_value);
         end
         
+        function testConvertScalarToArray(testCase)
+            converted_val = matlab2python(testCase.mat_scalar, 'array1');
+            testCase.verifyPyArrayEq(converted_val, py.PySideTests.numpy_scalar1_array_value);
+        end
+        
         function testConvertLogicalScalar(testCase)
             converted_val = matlab2python(true);
             testCase.verifyEqual(converted_val, py.PySideTests.bool_value);
         end
         
-%         function testConvertScalarToArray(testCase)
-%             converted_array = matlab2python(testCase.mat_scalar);
-%             testCase.verifyPyArrayEq(converted_array, testCase.py_1d_array);
-%         end
+        function testConvertLogicalScalarToArray(testCase)
+            converted_val = matlab2python(true, 'array1');
+            testCase.verifyPyArrayEq(converted_val, py.PySideTests.numpy_scalar1_bool_array_value);
+        end
         
         function testConvertArray(testCase)
             conv_py_2d_array = matlab2python(testCase.mat_2d_array);
@@ -136,6 +141,13 @@ classdef IPyMatTests < matlab.unittest.TestCase
             testCase.verifyPyCollEq(deep_dict, testCase.py_deep_dict);
         end
         
+        function testConvertStructScalarArrays(testCase)
+            flat_dict = matlab2python(testCase.mat_flat_struct, 'array1');
+            testCase.verifyPyCollEq(flat_dict, py.PySideTests.dict_scalar_arrays_value);
+            deep_dict = matlab2python(testCase.mat_deep_struct, 'array1');
+            testCase.verifyPyCollEq(deep_dict, py.PySideTests.dict_deep_scalar_arrays_value);
+        end
+        
         function testConvertPyInt(testCase)
             % Verify that python2matlab successfully converts a Python
             % integer to a Matlab scalar number. verifyEqual seems (in
@@ -152,6 +164,13 @@ classdef IPyMatTests < matlab.unittest.TestCase
             testCase.verifyEqual(conv_float, 1);
         end
         
+        function testConvertPyScalarFloatArray(testCase)
+            conv_float = python2matlab(py.PySideTests.numpy_scalar0_array_value);
+            testCase.verifyEqual(conv_float, 1);
+            conv_float = python2matlab(py.PySideTests.numpy_scalar1_array_value);
+            testCase.verifyEqual(conv_float, 1);
+        end
+        
         function testConvertPyString(testCase)
             % Verify that python2matlab successfully converts a Python
             % string to a Matlab string. verifyEqual seems (in
@@ -165,6 +184,13 @@ classdef IPyMatTests < matlab.unittest.TestCase
             % boolean to a Matlab scalar logical. verifyEqual seems (in
             % R2014b) to check that the types are the same as well.
             conv_bool = python2matlab(py.PySideTests.bool_value);
+            testCase.verifyEqual(conv_bool, true);
+        end
+        
+        function testConvertPyScalarBoolArray(testCase)
+            conv_bool = python2matlab(py.PySideTests.numpy_scalar0_bool_array_value);
+            testCase.verifyEqual(conv_bool, true);
+            conv_bool = python2matlab(py.PySideTests.numpy_scalar1_bool_array_value);
             testCase.verifyEqual(conv_bool, true);
         end
         
