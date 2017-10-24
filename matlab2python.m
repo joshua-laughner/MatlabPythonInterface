@@ -17,6 +17,15 @@ function [ pyval ] = matlab2python( val, varargin )
 %   the future, 'array0' might be an option to convert to Numpy 0D arrays.
 %   But it's not implemented yet, that's just why it's "array1" instead of
 %   "array".)
+%
+%   PYVAL = MATLAB2PYTHON( VAL, VEC_AS_MAT ) controls how Matlab vectors
+%   are converted to Numpy arrays. Options are 'never', 'row', 'column',
+%   'always' (default is 'never'). See LIST_RECURSION for information on
+%   each choice.
+
+%%%%%%%%%%%%%%%%%
+% INPUT PARSING %
+%%%%%%%%%%%%%%%%%
 
 xx = ~cellfun('isempty', regexpi(varargin, 'array1|scalar'));
 if sum(xx) == 0
@@ -26,9 +35,21 @@ else
     force_array = varargin{xxf};
 end
 
+xx = ~cellfun('isempty', regexp(varargin, 'never|row|column|always'));
+if sum(xx) == 0
+    vec_as_mat = 'never';
+else
+    xxf = find(xx,1,'last');
+    vec_as_mat = varargin{xxf};
+end
+
+%%%%%%%%%%%%%%%%%
+% MAIN FUNCTION %
+%%%%%%%%%%%%%%%%%
+
 if isnumeric(val) || islogical(val)
     if ~isscalar(val) || strcmpi(force_array, 'array1')
-        pyval = matarray2numpyarray(val);
+        pyval = matarray2numpyarray(val, [], [], vec_as_mat);
     else
         % Scalar numeric values can be directly converted.
         pyval = val;
@@ -37,9 +58,9 @@ elseif ischar(val)
     % strings can be directly converted
     pyval = val;
 elseif iscell(val)
-    pyval = cell2pylist(val, '', force_array);
+    pyval = cell2pylist(val, '', force_array, vec_as_mat);
 elseif isstruct(val)
-    pyval = struct2pydict(val, force_array);
+    pyval = struct2pydict(val, force_array, vec_as_mat);
 else
     error('pyinterface:not_implemented','Unable to convert field of type "%s" into appropriate Python type', class(val));
 end
