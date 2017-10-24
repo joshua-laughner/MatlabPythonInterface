@@ -18,6 +18,10 @@ elseif ~isvector(S) && ~suppress_warn
     warning('pyinterface:multi_dim_struct','S will be reshaped to a vector in the output list; any higher dimensional shape will be lost')
 end
 
+if ~exist( 'force_array', 'var' )
+    force_array = 'scalar';
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% MAIN FUNCTION %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%
