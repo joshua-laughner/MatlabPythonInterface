@@ -64,20 +64,24 @@ end
 % modifying list_recursion. Eventually, moving that code into
 % list_recursion will be preferred.
 
+% We need to record the original size for the case where A is 1 long in the
+% first dimension. When we flip A around, if it is e.g. 1x2x3, then the
+% size becomes just 3x2, which is fine for Matlab, but means we lose the
+% singleton first dimension when converting to a Numpy array.
+orig_size = size(A);
 if strcmpi(dimorder, 'match')
     permvec = ndims(A):-1:1;
     A = permute(A, permvec);
+    orig_size = fliplr(orig_size);
 end
 
-if isscalar(A)
-    N = py.numpy.array({A});
+
+l = list_recursion(A, numel(orig_size), orig_size);
+if ~exist('dtype', 'var')
+    N = py.numpy.array(l);
 else
-    l = list_recursion(A);
-    if ~exist('dtype', 'var')
-        N = py.numpy.array(l);
-    else
-        N = py.numpy.array(l, pyargs('dtype', dtype));
-    end
+    N = py.numpy.array(l, pyargs('dtype', dtype));
 end
+
 
 end

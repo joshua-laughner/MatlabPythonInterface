@@ -11,6 +11,9 @@ classdef IPyMatTests < matlab.unittest.TestCase
         py_1d_array;
         mat_2d_array;
         py_2d_array;
+        mat_3d_array;
+        mat_3d_array_s1;
+        mat_3d_array_s2;
         mat_flat_struct;
         py_flat_dict;
         mat_flat_cell;
@@ -44,6 +47,10 @@ classdef IPyMatTests < matlab.unittest.TestCase
             array_2d = [1,2; 3 4];
             testCase.mat_2d_array = array_2d;
             testCase.py_2d_array = py.PySideTests.numpy_array_value;
+            
+            testCase.mat_3d_array = zeros(2,3,4);
+            testCase.mat_3d_array_s1 = zeros(1,3,4);
+            testCase.mat_3d_array_s2 = zeros(2,1,4);
             
             % Structure and list test variables
             testCase.mat_flat_struct = struct('int_value', int32(1), 'float_value', 1, 'string_value', 'Hello world!', 'bool_value', true, 'array_value', array_2d);
@@ -121,6 +128,28 @@ classdef IPyMatTests < matlab.unittest.TestCase
             testCase.verifyPyArrayEq(matched_slices{2}, second_dim);
             testCase.verifyPyArrayEq(native_slices{1}, second_dim);
             testCase.verifyPyArrayEq(native_slices{2}, first_dim);
+        end
+        
+        function testArrayShapeMatched(testCase)
+            % This will test that numpy arrays come out with the same shape
+            % (in matched mode) as the input Matlab array
+            py_3d = matarray2numpyarray(testCase.mat_3d_array, 'match');
+            py_3d_s1 = matarray2numpyarray(testCase.mat_3d_array_s1, 'match');
+            py_3d_s2 = matarray2numpyarray(testCase.mat_3d_array_s2, 'match');
+            testCase.verifyShapes(testCase.mat_3d_array, py_3d, false);
+            testCase.verifyShapes(testCase.mat_3d_array_s1, py_3d_s1, false);
+            testCase.verifyShapes(testCase.mat_3d_array_s2, py_3d_s2, false);
+        end
+        
+        function testArrayShapeNative(testCase)
+            % This will test that numpy arrays come out with the reverse
+            % shape (in native mode) as the input Matlab array
+            py_3d = matarray2numpyarray(testCase.mat_3d_array, 'native');
+            py_3d_s1 = matarray2numpyarray(testCase.mat_3d_array_s1, 'native');
+            py_3d_s2 = matarray2numpyarray(testCase.mat_3d_array_s2, 'native');
+            testCase.verifyShapes(testCase.mat_3d_array, py_3d, true);
+            testCase.verifyShapes(testCase.mat_3d_array_s1, py_3d_s1, true);
+            testCase.verifyShapes(testCase.mat_3d_array_s2, py_3d_s2, true);
         end
         
         function testConvertCell(testCase)
@@ -236,6 +265,18 @@ classdef IPyMatTests < matlab.unittest.TestCase
             % evaluate equality - it's easier to do it on the Python side
             % (see PySideTests.are_collections_equal for more detail).
             testCase.verifyTrue(py.PySideTests.are_collections_equal(c1, c2));
+        end
+        
+        function verifyShapes(testCase, mat_array, py_array, is_native)
+            % This just has the logic to convert a Numpy array's shape
+            % tuple to a Matlab numeric array that we can compare to the
+            % size of the input mat array
+            mat_size = size(mat_array);
+            py_size = double(cell2mat(cell(py_array.shape)));
+            if is_native
+                py_size = fliplr(py_size);
+            end
+            testCase.verifyEqual(mat_size, py_size);
         end
     end
     
