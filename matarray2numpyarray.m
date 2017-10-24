@@ -1,4 +1,4 @@
-function [ N ] = matarray2numpyarray( A, dimorder, dtype )
+function [ N ] = matarray2numpyarray( A, dimorder, dtype, vec_as_mat )
 %MATARRAY2NUMPYARRAY Convert a Matlab array into a Python numpy array
 %   N = MATARRAY2NUMPYARRAY( A ) Converts the Matlab array, A, into a Numpy
 %   array N. Dimension order is treated so that N[:,0,0] == A(:,1,1).
@@ -15,6 +15,12 @@ function [ N ] = matarray2numpyarray( A, dimorder, dtype )
 %   or [], the default is used, i.e. MATARRARY2NUMPYARRAY( A, [], 'bool').
 %   Note that the datatype will be overridden if A is a Matlab logical
 %   array.
+%
+%   N = MATARRAY2NUMPYARRAY( A, ___, VEC_AS_MAT ) allows you to control how
+%   Matlab vectors are converted into Numpy arrays. See LIST_RECURSION()
+%   for full info. Options are 'never', 'row', 'column', or 'always'.
+%   DIMORDER and DTYPE can be given as empty strings or [] to use defaults.
+%   Default is 'never'.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -32,6 +38,10 @@ else
     if ~any(strcmpi(dimorder, allowed_orders))
         error('pyinterface:badinput','DIMORDER (if given) must be one of %s', strjoin(allowed_orders, ', '));
     end
+end
+
+if ~exist('vec_as_mat', 'var')
+    vec_as_mat = 'never';
 end
 
 % Python via Matlab does not support logical arrays, however, if we convert
@@ -76,8 +86,8 @@ if strcmpi(dimorder, 'match')
 end
 
 
-l = list_recursion(A, numel(orig_size), orig_size);
-if ~exist('dtype', 'var')
+l = list_recursion(A, numel(orig_size), orig_size, 'vec_as_mat', vec_as_mat);
+if ~exist('dtype', 'var') || isempty(dtype)
     N = py.numpy.array(l);
 else
     N = py.numpy.array(l, pyargs('dtype', dtype));

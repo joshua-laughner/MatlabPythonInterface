@@ -30,10 +30,10 @@ function l = list_recursion(A, varargin)
 %       one dimensional. This parameter can have values 'never', 'column',
 %       'row', or 'always'. 'never' means that any vector passed in will be
 %       converted to a 1D numpy array (default). 'row' and 'column' mean
-%       that only row or column vectors, respectively will be converted to
-%       1D numpy arrays, the other will become a 2D array with length 1 in
-%       one dimension. 'always' means that any vector passed in becomes a
-%       2D numpy array with length 1 in one dimension.
+%       that row or column vectors, respectively will be converted a 2D
+%       array with length 1 in one dimension, the other will become a 1D
+%       numpy array. 'always' means that any vector passed in becomes a 2D
+%       numpy array with length 1 in one dimension.
 %
 %       'force_array' - passed through to MATLAB2PYTHON. Pass the string
 %       'array1' as the value to force scalar values to be created as size
@@ -78,7 +78,7 @@ elseif ~iscell(A)
     error('pyinterface:bad_input', 'LIST_RECURSION is only defined for A as a numeric array or cell array');
 end
 
-if isvector(A) && (base_dim == 1 || strcmpi(vector_as_matrix, 'never') || (strcmpi(vector_as_matrix, 'column') && isrow(A)) || (strcmpi(vector_as_matrix, 'row') && iscolumn(A)))
+if isvector(A) && (base_dim == 1 || strcmpi(vector_as_matrix, 'never') || (strcmpi(vector_as_matrix, 'column') && iscolumn(A)) || (strcmpi(vector_as_matrix, 'row') && isrow(A)))
     % We should enter this branch under the following conditions:
     %   A) The input array is a vector and either:
     %       i) It is the last dimension of the original input array

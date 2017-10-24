@@ -4,11 +4,21 @@ classdef IPyMatTests < matlab.unittest.TestCase
     %   execute the unit tests for the interface using Matlab's unit
     %   testing framework.
     
+    % Currently a slight shortcoming of these tests is that since the
+    % default int type in Python 2 is a 32 bit, if we want to test
+    % converting Matlab ints to Python ints, we have to make them 32 bit on
+    % this side, but converting Python ints to Matlab ints are
+    % automatically converted to 64 bit ints, so the Py --> Mat tests have
+    % to specify their test results to have 64 bit ints, whereas the
+    % instance properties typically use 32 bit ints.
+    
     properties
         mat_scalar;
         py_scalar;
         py_0d_array;
         py_1d_array;
+        mat_row_vec;
+        mat_col_vec;
         mat_2d_array;
         py_2d_array;
         mat_3d_array;
@@ -43,6 +53,10 @@ classdef IPyMatTests < matlab.unittest.TestCase
             testCase.py_1d_array = py.numpy.array(testCase.mat_scalar);
             testCase.py_1d_array = py.numpy.array(py.list({testCase.mat_scalar}));
             
+            % Vector test variables
+            testCase.mat_row_vec = zeros(1,10);
+            testCase.mat_col_vec = zeros(10,1);
+            
             % Array test variables
             array_2d = [1,2; 3 4];
             testCase.mat_2d_array = array_2d;
@@ -56,14 +70,10 @@ classdef IPyMatTests < matlab.unittest.TestCase
             testCase.mat_flat_struct = struct('int_value', int32(1), 'float_value', 1, 'string_value', 'Hello world!', 'bool_value', true, 'array_value', array_2d);
             testCase.py_flat_dict = py.PySideTests.dict_value;
             
-            % after fixing list recursion to handle arrays, add
-            % testCase.mat_2d_array to then end of this.
-            testCase.mat_flat_cell = {int32(1), 1, 'Hello world!', true};%, testCase.mat_2d_array};
+            testCase.mat_flat_cell = {int32(1), 1, 'Hello world!', true, testCase.mat_2d_array};
             % py.list can't deal with a cell array with numeric arrays in
-            % it; must convert the array to a numpy array first (add
-            % testCase.py_2d_array to the end of this after list recursion
-            % fixed)
-            py_input_cell = testCase.mat_flat_cell;
+            % it; must convert the array to a numpy array first 
+            py_input_cell = [testCase.mat_flat_cell(1:4), {testCase.py_2d_array}];
             testCase.py_flat_list = py.list(py_input_cell);
             
             testCase.mat_deep_struct = struct('dict_value', testCase.mat_flat_struct,...
@@ -152,6 +162,48 @@ classdef IPyMatTests < matlab.unittest.TestCase
             testCase.verifyShapes(testCase.mat_3d_array_s2, py_3d_s2, true);
         end
         
+        function testVecAsMatNever(testCase)
+            % Test converting a row and a column vector using the 'never'
+            % option of LIST_RECURSION. Both should end up as 1D numpy
+            % arrays.
+            py_row_vec = matarray2numpyarray(testCase.mat_row_vec, [], [], 'never');
+            py_col_vec = matarray2numpyarray(testCase.mat_col_vec, [], [], 'never');
+            testCase.verifyShapes(numel(testCase.mat_row_vec), py_row_vec, -1);
+            testCase.verifyShapes(numel(testCase.mat_col_vec), py_col_vec, -1);
+        end
+        
+        function testVecAsMatRow(testCase)
+            % Test converting a row and a column vector using the 'never'
+            % option of LIST_RECURSION. Both should end up as 1D numpy
+            % arrays.
+            py_row_vec = matarray2numpyarray(testCase.mat_row_vec, [], [], 'row');
+            py_col_vec = matarray2numpyarray(testCase.mat_col_vec, [], [], 'row');
+            testCase.verifyShapes(size(testCase.mat_row_vec), py_row_vec, -1);
+            testCase.verifyShapes(numel(testCase.mat_col_vec), py_col_vec, -1);
+        end
+        
+        function testVecAsMatColumn(testCase)
+            % Test converting a row and a column vector using the 'never'
+            % option of LIST_RECURSION. Both should end up as 1D numpy
+            % arrays.
+            py_row_vec = matarray2numpyarray(testCase.mat_row_vec, [], [], 'column');
+            py_col_vec = matarray2numpyarray(testCase.mat_col_vec, [], [], 'column');
+            testCase.verifyShapes(numel(testCase.mat_row_vec), py_row_vec, -1);
+            testCase.verifyShapes(size(testCase.mat_col_vec), py_col_vec, -1);
+        end
+        
+        function testVecAsMatAlways(testCase)
+            % Test converting a row and a column vector using the 'never'
+            % option of LIST_RECURSION. Both should end up as 1D numpy
+            % arrays.
+            py_row_vec = matarray2numpyarray(testCase.mat_row_vec, [], [], 'always');
+            py_col_vec = matarray2numpyarray(testCase.mat_col_vec, [], [], 'always');
+            testCase.verifyShapes(size(testCase.mat_row_vec), py_row_vec, -1);
+            testCase.verifyShapes(size(testCase.mat_col_vec), py_col_vec, -1);
+        end
+        
+        % TODO: Add tests for arrays in structures and cell arrays
+        
         function testConvertCell(testCase)
             % Cell arrays convert to python lists.
             flat_list = matlab2python(testCase.mat_flat_cell);
@@ -233,7 +285,7 @@ classdef IPyMatTests < matlab.unittest.TestCase
             % list to a Matlab scalar logical. verifyEqual seems (in
             % R2014b) to check that the types are the same as well.
             conv_list = python2matlab(py.PySideTests.list_value);
-            test_cell = {int64(1), 1, 'Hello world!', true};
+            test_cell = {int64(1), 1, 'Hello world!', true, testCase.mat_2d_array};
             testCase.verifyEqual(conv_list, test_cell);
         end
         
@@ -271,9 +323,19 @@ classdef IPyMatTests < matlab.unittest.TestCase
             % This just has the logic to convert a Numpy array's shape
             % tuple to a Matlab numeric array that we can compare to the
             % size of the input mat array
-            mat_size = size(mat_array);
+            %
+            % is_native controls how the order of dimensions is compared,
+            % if 0, the size of mat_array and py_array are directly
+            % compared. If 1, the size of py_array is reversed first. If
+            % -1, mat_array is treated as a size itself, not the array to
+            % take the size of.
+            if is_native >= 0
+                mat_size = size(mat_array);
+            else
+                mat_size = mat_array;
+            end
             py_size = double(cell2mat(cell(py_array.shape)));
-            if is_native
+            if is_native > 0
                 py_size = fliplr(py_size);
             end
             testCase.verifyEqual(mat_size, py_size);
