@@ -11,9 +11,9 @@ function [ N ] = matarray2numpyarray( A, dimorder, dtype )
 %
 %   N = MATARRAY2NUMPYARRAY( A, ___, DTYPE ) allows you to specify the data
 %   type as a string (e.g. 'bool', 'float', 'int64'). The dimension order
-%   must be specified ('match' or 'native') but if you pass an empty
-%   string or, the default is used, i.e. MATARRARY2NUMPYARRAY( A, [],
-%   'bool'). Note that this will be overridden if A is a Matlab logical
+%   must be specified ('match' or 'native') but if you pass an empty string
+%   or [], the default is used, i.e. MATARRARY2NUMPYARRAY( A, [], 'bool').
+%   Note that the datatype will be overridden if A is a Matlab logical
 %   array.
 
 
@@ -59,17 +59,25 @@ end
 % the 'match' dimorder is chosen, we should be able to get the dimension
 % ordering to behave the same by reversing the order of the dimension of
 % the Matlab array first.
+%
+% For scalar values, we directly convert them here for now rather than
+% modifying list_recursion. Eventually, moving that code into
+% list_recursion will be preferred.
 
 if strcmpi(dimorder, 'match')
     permvec = ndims(A):-1:1;
     A = permute(A, permvec);
 end
 
-l = list_recursion(A);
-if ~exist('dtype', 'var')
-    N = py.numpy.array(l);
+if isscalar(A)
+    N = py.numpy.array({A});
 else
-    N = py.numpy.array(l, pyargs('dtype', dtype));
+    l = list_recursion(A);
+    if ~exist('dtype', 'var')
+        N = py.numpy.array(l);
+    else
+        N = py.numpy.array(l, pyargs('dtype', dtype));
+    end
 end
 
 end
